@@ -1,0 +1,119 @@
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+a {
+    text-decoration: none;
+}
+.search-form {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    padding: 25px 0 25px 0;
+
+    background: linear-gradient(315deg,
+            rgba(166, 193, 203, 0.7) 3%,
+            rgba(60, 69, 172, 0.7) 38%,
+            rgba(47, 60, 162, 0.7) 68%,
+            rgba(12, 37, 105, 0.7) 98%);
+    box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.5);
+}
+.search-form input{
+    width: 300px;
+        height: 35px;
+        padding: 5px 5px 5px 15px;
+        font-size: 16px;
+        outline: none;
+        border: 2px #7d7676 solid;
+        border-radius: 5px;
+       
+}
+.search-form button {
+  
+        width: 140px;
+        height: 40px;
+        font-size: 16px;
+        font-weight: 600;
+        border: 2px #7d7676 solid;
+        border-radius: 5px;
+}
+.gallery {
+    flex-wrap: wrap;
+    margin: -15px;
+    padding-top: 150px;
+    display: flex;
+    justify-content: center;
+    row-gap: 18px;
+    column-gap: 15px;
+
+    
+    
+    
+}
+.photo-card{
+    flex-basis: calc(100% / 3 - 15px * 2);
+    border-radius: 8px;
+    box-shadow: 5px 3px 3px #7d7676;
+    overflow: hidden;
+    background-color: rgba(241, 215, 239, 0.5);
+}
+.photo-img {
+    height: 400px;
+    width: 100%;
+    object-fit: cover;
+    overflow: hidden;
+}
+
+.gallery .info{
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+}
+.is-hidden {
+    visibility: hidden;
+}
+
+.load-more {
+    width: 150px;
+    height: 40px;
+    margin-top: 50px;
+    margin-bottom: 30px;
+   
+    margin-left: 50%;
+    transform: translateX(-50%);
+    
+    cursor: pointer;
+    color: black;
+    background-color: rgb(238, 204, 229);
+
+    font-size: 16px;
+    font-weight: 600;
+    border: 2px solid #7d7676;
+    border-radius: 5px;
+
+   
+    }
+   .load-more:hover,
+    .load-more:focus,
+    .search-form button:hover,
+    .search-form button:focus {
+    background-color: rgb(99, 18, 107);
+    color: #fff;
+    }
+
+    
