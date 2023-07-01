@@ -1,134 +1,141 @@
-import ApiService from './js/api-service.js';
 import Notiflix from 'notiflix';
+import axios from 'axios';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
-const searchForm = document.querySelector('.search-form');
-const galleryContainer = document.querySelector('.gallery');
-const loadMoreBtn = document.querySelector('.load-more');
-let shownElementsNum = 0;
+let pageCounter = 1;
+let total = 0;
+let totalPages = 0;
+let query = "";
+const lightbox = new SimpleLightbox('.gallery a', {
+    captionsData: 'alt',
+    captionDelay: 250,
+});
 
-const getGalleryData = new ApiService();
+const axiosInstance =  axios.create({
+  method: "GET",
+  baseURL: "https://pixabay.com/api/",
+  params: { 
+      key : '37760459-bf670a4af420eae2f9d25b705',
+      image_type : 'photo',
+      orientation : 'horizontal',
+      safesearch : 'true',
+      page : 1,
+      per_page : 40,
+      q : "",
+      },
+});
 
-searchForm.addEventListener('submit', handleSearchSubmit);
-loadMoreBtn.addEventListener('click', handleLoadMoreBtnClick);
+const formEl = document.querySelector("#search-form");
+formEl.addEventListener("submit", formHeandler);
+
+const imageBox = document.querySelector(".gallery");
 
 
+const loadBtn = document.querySelector('.load-more');
+loadBtn.classList.add('visually-hidden');
+loadBtn.addEventListener("click", loadMoreHandler);
 
-async function handleSearchSubmit(e) {
-  e.preventDefault();
+const infoBlock = document.querySelector('.text-info');
+infoBlock.classList.add('visually-hidden');
 
-  galleryContainer.innerHTML = '';
-  getGalleryData.searchQuery = searchForm.firstElementChild.value.trim();
-  
-  getGalleryData.resetPageNumber();
-  shownElementsNum = 0;
+const numberField = document.querySelector('.span-numbers');
+const queryField = document.querySelector('.span-query');
+const pageCounterText = document.querySelector('.page-counter');
 
-  
+async function formHeandler(event) {
+    event.preventDefault();
+    pageCounter = 1;
+    totalPages = 0;
+    imageBox.innerHTML = '';
 
-   if (getGalleryData.searchQuery === '') {
-    Notiflix.Notify.failure(
-      'The search string cannot be empty. Please specify your search query.',
-    );
-    return;
-  }
+    query = event.currentTarget.elements[0].value;
 
-  fetchGallery();
-  
-}
+    if (!query) {
+      
+      Notiflix.Notify.info('The search bar is empty ¯\\_(ツ)_/¯');
 
-async function fetchGallery() {
-  loadMoreBtn.classList.add('is-hidden');
-  
-  const result = await getGalleryData.fetchGallery();
-  const { hits, total } = result;
-  
+    } else {
+      const images = await getImages(query);
+      total = images.data.total;
 
-    
-  if (!hits.length) {
-     Notiflix.Notify.failure(
-      `Sorry, there are no images matching your search query. Please try again.`
-    );
-    loadMoreBtn.classList.add('is-hidden');
-    return;
-  }
 
-  createMarkup(hits);
-  shownElementsNum += hits.length;
-  console.log(`shownElementsNum ${shownElementsNum}`);
-   console.log(`total: ${total}`);
-  if (shownElementsNum < total) {
-    loadMoreBtn.classList.remove('is-hidden');
-  } else {
-    loadMoreBtn.classList.add('is-hidden');
-     Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
-  }
-}
-  
-  
-  
-  console.log(`shownElementsNum: ${shownElementsNum}`);
-  
+      if (total > 0) {
+        if (total <= 40) {
+          loadBtn.classList.add('visually-hidden');
+          pageCounterText.textContent = "";
+        } else {
+          loadBtn.classList.remove('visually-hidden');
+          totalPages = Math.ceil(total / 40);
+          pageCounterText.textContent = `${pageCounter} / ${totalPages}`;
+        }
  
-
-
-function createMarkup(data) {
-  const markup = data
-    .map(
-      ({
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      }) => {
-        return `<div class="photo-card">
-      <a href="${largeImageURL}">
-        <img class="photo-img" src="${webformatURL}" alt="${tags}" loading="lazy" />
-      </a>
-      <div class="info">
-        <p class="info-item">
-          <b>Likes</b>
-          ${likes}
-        </p>
-        <p class="info-item">
-          <b>Views</b>
-          ${views}
-        </p>
-        <p class="info-item">
-          <b>Comments</b>
-          ${comments}
-        </p>
-        <p class="info-item">
-          <b>Downloads</b>
-          ${downloads}
-        </p>
-      </div>
-    </div>`;
+        Notiflix.Notify.success(`Hooray! We found ${total} images.`);
+        infoBlock.classList.remove('visually-hidden');
+        numberField.textContent = total;
+        queryField.textContent = query;
+        drawPhotos(images);
+      } else {
+        loadBtn.classList.add('visually-hidden');
+        Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
       }
-    )
-    .join('');
-  galleryContainer.insertAdjacentHTML('beforeend', markup);
+
+    }
+   
+    formEl.reset(); 
+}
+
+async function getImages(query, page = 1) {
+    const urlParams = {
+      params: {
+        q: query,
+        page: page,
+      }
+    };
+
+    return await axiosInstance(urlParams);
+}
+
+function drawPhotos({data:{hits}}) {
+
+  const markup = hits.map(({previewURL, webformatURL, largeImageURL, views, tags, comments, likes, downloads }) => {
+    return `<a class="photo-link" href="${largeImageURL}">
+    <div class="photo-card" >
+      <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+    <div class="info">
+      <p class="info-item">
+        <b title="Likes">&#10084; ${likes}</b>
+      </p>
+      <p class="info-item">
+        <b title="Views">&#8858; ${views}</b>
+      </p>
+      <p class="info-item">
+        <b title="Comments">&#9997; ${comments}</b>
+      </p>
+      <p class="info-item">
+        <b title="Downloads">&#8615; ${downloads}</b>
+      </p>
+    </div>
+    </div>
+    </a>`;
+  }).join(" ");
+
+  imageBox.insertAdjacentHTML("beforeend", markup);
+  
   lightbox.refresh();
 }
 
 
-
-function handleLoadMoreBtnClick() {
-   
-   getGalleryData.incrementPageNumber();
-  fetchGallery();
-  
+async function loadMoreHandler() {
+  pageCounter += 1;
+  pageCounterText.textContent = `${pageCounter} / ${totalPages}`;
+  if (totalPages === pageCounter) {
+    loadBtn.classList.add('visually-hidden');
+    Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
+  }
+  const images = await getImages(query, pageCounter);
  
-  
+  drawPhotos(images);
+  lightbox.refresh();
 
 }
-
-
-let lightbox = new SimpleLightbox('.photo-card a', {
-  captions: true,
-  captionsData: 'alt',
-  captionDelay: 200,
-});
